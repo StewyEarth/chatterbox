@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,8 +9,9 @@
 
 	<link rel="stylesheet" href="/assets/css/style.css">
 </head>
+
 <body>
-	
+
 	<nav>
 		<a href="/" class="siteBrand">
 			<img src="/assets/images/catter.svg" alt="Chatterbox logo" class="siteBrand__logo">
@@ -18,32 +20,110 @@
 	</nav>
 
 	<article class="mainChatView">
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
-		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p>
+		<!-- <p class="mainChatView__me"><span class="mainChatView__name">Brian</span> Wazzaaaaaaa!?</p>
+		<p class="mainChatView__other"><span class="mainChatView__name">Egon</span> Wazzaaaaaaa!?</p> -->
 	</article>
 
-	<article class="chatMessage">
-		<input type="text" class="chatMessage__input" placeholder="What's on your mind?">
-		<button class="chatMessage__button">Send</button>
-	</article>
+	<form class="chatMessage">
+		<input type="text" class="chatMessage__input" placeholder="Enter a name to join!">
+		<button class="chatMessage__button">Join</button>
+	</form>
 
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
 		var socket = io();
+		let form = document.querySelector(".chatMessage")
+		let button = document.querySelector(".chatMessage__button");
+		let input = document.querySelector(".chatMessage__input");
+		let mainChatView = document.querySelector(".mainChatView");
+		let user;
+		let join = true;
+
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+
+			if (join) {
+				if(input.value == ""){
+					return;
+				}
+				join = false
+				input.placeholder = "What do you have on our mind?";
+				button.textContent = "Send";
+				user = input.value;
+				socket.emit("userjoin", user)
+				form.reset()
+
+			} else {
+				if (input.value == "") {
+					return;
+				}
+				//Emoticon filter
+				input.value = input.value.replace(":)", "<img src='/assets/images/smile.png' class='emoticon'>")
+				input.value = input.value.replace(":-)", "<img src='/assets/images/smile.png' class='emoticon'>")
+				input.value = input.value.replace("(:", "<img src='/assets/images/smile.png' class='emoticon'>")
+				input.value = input.value.replace("(-:", "<img src='/assets/images/smile.png' class='emoticon'>")
+				input.value = input.value.replace(":D", "<img src='/assets/images/yes.jpg' class='emoticon'>")
+
+
+				socket.send({ msg: input.value, timestamp: Date.now(), user: user });
+				let date = new Date();
+				let small = document.createElement("small")
+				let hours = date.getHours()
+				let minutes = date.getMinutes()
+				hours = hours < 10 ? "0" + hours : hours
+				minutes = minutes < 10 ? "0" + minutes : minutes;
+				small.textContent = `${hours}:${minutes}`
+				small.classList = "message-timestamp message-timestamp--right"
+
+				let p = document.createElement("p");
+				p.classList.add("mainChatView__me");
+				p.innerHTML = `${input.value}`
+
+				mainChatView.appendChild(small)
+				mainChatView.appendChild(p)
+				form.reset()
+				updateScroll()
+				var audio = new Audio("/assets/sounds/send.mp3");
+				audio.play();
+			}
+
+		})
+
+		socket.on('message', function (msg) {
+			let p = document.createElement("p");
+			p.classList.add("mainChatView__other");
+			p.innerHTML = `<span class="mainChatView__name">${msg.user}</span> 
+				${msg.msg}`
+			let small = document.createElement("small")
+			let date = new Date(msg.timestamp);
+			console.log(date)
+			let hours = date.getHours()
+			let minutes = date.getMinutes()
+			hours = hours < 10 ? "0" + hours : hours
+			minutes = minutes < 10 ? "0" + minutes : minutes;
+			small.textContent = `${hours}:${minutes}`;
+			small.classList = "message-timestamp message-timestamp--left"
+			mainChatView.appendChild(small)
+			mainChatView.appendChild(p)
+
+			updateScroll()
+			var audio = new Audio("/assets/sounds/send.mp3");
+			audio.play();
+		});
+		socket.on('userjoin', function (msg) {
+			let userjoinSmall = document.createElement("small")
+			console.log(msg)
+			userjoinSmall.classList.add("userStatus")
+			userjoinSmall.textContent = `${msg} has joined the chat`
+			mainChatView.appendChild(userjoinSmall)
+			updateScroll()
+			var audio = new Audio("/assets/sounds/send.mp3");
+				audio.play();
+		});
+		function updateScroll() {
+			mainChatView.scrollTop = mainChatView.scrollHeight;
+		}
 	</script>
 </body>
+
 </html>

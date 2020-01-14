@@ -38,17 +38,20 @@ body {
 	text-align: right;
 	background-color: lightblue;
 	border-bottom-right-radius: 0;
+	width: 50%;
+	margin: 1em 0 1em auto;
 }
 
 .mainChatView__other {
 	text-align: left;
 	background-color: lightgray;
 	border-top-left-radius: 0;
+	width: 50%;
 }
 
 .mainChatView__name {
 	display: block;
-	font-size: 50%;
+	font-size: 70%
 }
 
 .chatMessage {
@@ -72,4 +75,23 @@ body {
 	background-color: hsl(120, 50%, 30%);
 	color: hsl(0, 0%, 96%);
 	border: none;
+	border: 1px solid transparent;
+}
+.emoticon{
+	height: 5em;
+}
+.message-timestamp{
+	display: block;
+	color: gray;
+}
+.message-timestamp--right{
+	text-align: right;
+}
+.message-timestamp--left{
+	text-align: left;
+}
+.userStatus{
+	display: block;
+	text-align: center;
+	color: rgb(219, 187, 1);
 }
